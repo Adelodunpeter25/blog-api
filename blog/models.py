@@ -3,6 +3,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Category(models.Model):
@@ -62,6 +64,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views_count = models.PositiveIntegerField(default=0)
+    is_featured = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
@@ -91,3 +94,51 @@ class Comment(models.Model):
     def __str__(self):
         author_name = self.author.username if self.author else self.email
         return f'Comment by {author_name} on {self.post.title}'
+
+
+class UserProfile(models.Model):
+    """Extended user profile with additional fields."""
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(max_length=500, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    website = models.URLField(blank=True)
+    twitter = models.CharField(max_length=50, blank=True)
+    github = models.CharField(max_length=50, blank=True)
+    linkedin = models.CharField(max_length=50, blank=True)
+    follower_count = models.PositiveIntegerField(default=0)
+    following_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+
+class Follow(models.Model):
+    """User following system."""
+    
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Create user profile when user is created."""
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """Save user profile when user is saved."""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

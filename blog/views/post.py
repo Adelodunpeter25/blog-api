@@ -100,6 +100,17 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def featured(self, request):
+        """Get featured posts."""
+        featured_posts = Post.objects.filter(
+            status='published', 
+            is_featured=True
+        ).select_related('author', 'category').prefetch_related('tags')[:10]
+        
+        serializer = PostListSerializer(featured_posts, many=True, context={'request': request})
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def statistics(self, request):
         """Get blog statistics - total posts, views, most viewed post."""
         stats = get_blog_statistics()
