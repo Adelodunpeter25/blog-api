@@ -1,5 +1,5 @@
 """
-URL configuration for blog_api project.
+URL configuration for blog_project.
 """
 from django.contrib import admin
 from django.urls import path
