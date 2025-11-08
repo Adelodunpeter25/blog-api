@@ -60,3 +60,18 @@ class CommentViewSet(viewsets.ModelViewSet):
         comment.is_approved = True
         comment.save()
         return Response({'status': 'comment approved'})
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        """Reject/unapprove a comment (admin only)."""
+        comment = self.get_object()
+        comment.is_approved = False
+        comment.save()
+        return Response({'status': 'comment rejected'})
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def pending(self, request):
+        """Get pending comments for moderation (admin only)."""
+        pending_comments = Comment.objects.filter(is_approved=False).select_related('post', 'author')
+        serializer = CommentSerializer(pending_comments, many=True, context={'request': request})
+        return Response(serializer.data)

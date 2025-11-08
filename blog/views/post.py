@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Q
 from blog.models import Post
 from blog.serializers import PostListSerializer, PostDetailSerializer, PostCreateUpdateSerializer
-from blog.utils import PostFilter
+from blog.utils import PostFilter, get_blog_statistics, get_blog_statistics
 
 
 class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
@@ -82,4 +82,37 @@ class PostViewSet(viewsets.ModelViewSet):
         """Get current user's posts (including drafts)."""
         posts = Post.objects.filter(author=request.user).select_related('category').prefetch_related('tags')
         serializer = PostListSerializer(posts, many=True, context={'request': request})
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def statistics(self, request):
+        """Get blog statistics - total posts, views, most viewed post."""
+        stats = get_blog_statistics()
+        return Response(stats)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def drafts(self, request):
+        """Get current user's draft posts."""
+        drafts = Post.objects.filter(author=request.user, status='draft')
+        drafts = drafts.select_related('category').prefetch_related('tags')
+        serializer = PostListSerializer(drafts, many=True, context={'request': request})
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def statistics(self, request):
+        """Get blog statistics - total posts, views, most viewed post."""
+        stats = get_blog_statistics()
+        return Response(stats)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def drafts(self, request):
+        """Get current user's draft posts."""
+        if not request.user.is_staff and request.user != request.user:
+            # Only show own drafts unless admin
+            drafts = Post.objects.filter(author=request.user, status='draft')
+        else:
+            drafts = Post.objects.filter(status='draft')
+        
+        drafts = drafts.select_related('category').prefetch_related('tags')
+        serializer = PostListSerializer(drafts, many=True, context={'request': request})
         return Response(serializer.data)
