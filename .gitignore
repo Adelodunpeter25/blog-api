@@ -65,6 +65,3 @@ htmlcov/
 
 # Migrations
 *migrations
-
-# Docs
-*md
