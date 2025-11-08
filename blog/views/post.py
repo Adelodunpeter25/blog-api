@@ -1,11 +1,13 @@
 """Post viewsets."""
 
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Q
 from blog.models import Post
 from blog.serializers import PostListSerializer, PostDetailSerializer, PostCreateUpdateSerializer
+from blog.utils import PostFilter
 
 
 class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
@@ -21,6 +23,11 @@ class PostViewSet(viewsets.ModelViewSet):
     """Main viewset for posts with different actions."""
     
     lookup_field = 'slug'
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = PostFilter
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_at', 'views_count', 'title']
+    ordering = ['-created_at']
     
     def get_queryset(self):
         """Filter posts based on user permissions."""
