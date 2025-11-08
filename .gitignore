@@ -62,3 +62,6 @@ Thumbs.db
 .pytest_cache/
 .tox/
 htmlcov/
+
+# Migrations
+*migrations

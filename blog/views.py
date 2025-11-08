@@ -1,3 +1,3 @@
-from django.shortcuts import render
+"""Blog views for API endpoints."""
 
-# Create your views here.
+from django.shortcuts import render
