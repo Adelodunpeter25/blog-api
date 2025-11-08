@@ -142,3 +142,40 @@ def save_user_profile(sender, instance, **kwargs):
     """Save user profile when user is saved."""
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
+
+class Reaction(models.Model):
+    """Post reactions (like, love, bookmark)."""
+    
+    REACTION_CHOICES = [
+        ('like', 'Like'),
+        ('love', 'Love'),
+        ('bookmark', 'Bookmark'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reactions')
+    reaction_type = models.CharField(max_length=10, choices=REACTION_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post', 'reaction_type')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} {self.reaction_type}d {self.post.title}"
+
+
+class ReadingList(models.Model):
+    """User's reading list for saving posts."""
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reading_list')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='saved_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post')
+        ordering = ['-added_at']
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.post.title}"

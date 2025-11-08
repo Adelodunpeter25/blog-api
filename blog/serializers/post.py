@@ -16,12 +16,15 @@ class PostListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     excerpt = serializers.SerializerMethodField()
     read_time = serializers.SerializerMethodField()
+    reaction_counts = serializers.SerializerMethodField()
+    user_reactions = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
         fields = [
             'id', 'title', 'slug', 'excerpt', 'author_name', 'category', 
-            'tags', 'featured_image', 'created_at', 'views_count', 'read_time'
+            'tags', 'featured_image', 'created_at', 'views_count', 'read_time',
+            'reaction_counts', 'user_reactions'
         ]
     
     def get_author_name(self, obj):
@@ -36,6 +39,20 @@ class PostListSerializer(serializers.ModelSerializer):
         """Estimate read time based on word count (200 words per minute)."""
         word_count = len(obj.content.split())
         return max(1, math.ceil(word_count / 200))
+    
+    def get_reaction_counts(self, obj):
+        """Get reaction counts for the post."""
+        from django.db.models import Count
+        reactions = obj.reactions.values('reaction_type').annotate(count=Count('reaction_type'))
+        return {reaction['reaction_type']: reaction['count'] for reaction in reactions}
+    
+    def get_user_reactions(self, obj):
+        """Get current user's reactions to this post."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user_reactions = obj.reactions.filter(user=request.user).values_list('reaction_type', flat=True)
+            return list(user_reactions)
+        return []
 
 
 class PostDetailSerializer(serializers.ModelSerializer):

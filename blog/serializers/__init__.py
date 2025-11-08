@@ -5,6 +5,7 @@ from .tag import TagSerializer
 from .comment import CommentSerializer
 from .post import PostListSerializer, PostDetailSerializer, PostCreateUpdateSerializer
 from .user import UserSerializer, UserProfileSerializer, FollowSerializer
+from .reaction import ReactionSerializer, ReadingListSerializer
 
 __all__ = [
     'CategorySerializer',
@@ -16,4 +17,6 @@ __all__ = [
     'UserSerializer',
     'UserProfileSerializer',
     'FollowSerializer',
+    'ReactionSerializer',
+    'ReadingListSerializer',
 ]

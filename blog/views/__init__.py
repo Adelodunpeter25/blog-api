@@ -5,6 +5,7 @@ from .tag import TagViewSet
 from .post import PostViewSet
 from .comment import CommentViewSet
 from .user import UserViewSet
+from .reaction import ReactionViewSet, ReadingListViewSet
 
 __all__ = [
     'CategoryViewSet',
@@ -12,4 +13,6 @@ __all__ = [
     'PostViewSet', 
     'CommentViewSet',
     'UserViewSet',
+    'ReactionViewSet',
+    'ReadingListViewSet',
 ]
