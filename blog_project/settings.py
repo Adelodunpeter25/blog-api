@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_framework',
     'rest_framework_simplejwt',
+     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'allauth',
@@ -138,6 +139,11 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 # Social Auth Settings
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
+        'APP': {
+            'client_id': os.getenv('GOOGLE_OAUTH2_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET'),
+            'key': ''
+        },
         'SCOPE': [
             'profile',
             'email',

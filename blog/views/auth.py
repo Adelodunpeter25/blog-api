@@ -96,6 +96,98 @@ def google_auth(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def login_view(request):
+    """Login with email and password."""
+    email = request.data.get('email')
+    password = request.data.get('password')
+    
+    if not email or not password:
+        return Response(
+            {'error': 'Email and password are required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(email=email)
+        if user.check_password(password):
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            
+            # Serialize user data
+            user_serializer = UserSerializer(user, context={'request': request})
+            
+            return Response({
+                'access_token': str(access_token),
+                'refresh_token': str(refresh),
+                'user': user_serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {'error': 'Invalid credentials'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Invalid credentials'}, 
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    """Register new user with email and password."""
+    email = request.data.get('email')
+    password = request.data.get('password')
+    first_name = request.data.get('first_name', '')
+    last_name = request.data.get('last_name', '')
+    
+    if not email or not password:
+        return Response(
+            {'error': 'Email and password are required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    if User.objects.filter(email=email).exists():
+        return Response(
+            {'error': 'User with this email already exists'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Create username from email
+    username = email.split('@')[0]
+    counter = 1
+    original_username = username
+    while User.objects.filter(username=username).exists():
+        username = f"{original_username}{counter}"
+        counter += 1
+    
+    # Create user
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name
+    )
+    
+    # Generate JWT tokens
+    refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+    
+    # Serialize user data
+    user_serializer = UserSerializer(user, context={'request': request})
+    
+    return Response({
+        'access_token': str(access_token),
+        'refresh_token': str(refresh),
+        'user': user_serializer.data
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def logout_view(request):
     """Logout user by blacklisting refresh token."""
     try:
