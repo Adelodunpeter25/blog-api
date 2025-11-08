@@ -8,12 +8,32 @@ from blog.models import UserProfile, Follow
 class UserProfileSerializer(serializers.ModelSerializer):
     """User profile serializer."""
     
+    avatar_thumbnail = serializers.SerializerMethodField()
+    avatar_small = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfile
         fields = [
-            'bio', 'avatar', 'website', 'twitter', 'github', 
-            'linkedin', 'follower_count', 'following_count'
+            'bio', 'avatar', 'avatar_thumbnail', 'avatar_small',
+            'website', 'twitter', 'github', 'linkedin', 
+            'follower_count', 'following_count'
         ]
+    
+    def get_avatar_thumbnail(self, obj):
+        """Get avatar thumbnail URL."""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar_thumbnail.url)
+        return None
+    
+    def get_avatar_small(self, obj):
+        """Get small avatar URL."""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar_small.url)
+        return None
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 
 
 class Category(models.Model):
@@ -59,7 +61,35 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
     tags = models.ManyToManyField(Tag, blank=True, related_name='posts')
-    featured_image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    featured_image = models.ImageField(
+        upload_to='posts/', 
+        blank=True, 
+        null=True
+    )
+    featured_image_large = ImageSpecField(
+        source='featured_image',
+        processors=[ResizeToFill(800, 400)],
+        format='JPEG',
+        options={'quality': 85}
+    )
+    featured_image_medium = ImageSpecField(
+        source='featured_image',
+        processors=[ResizeToFill(400, 200)],
+        format='JPEG',
+        options={'quality': 80}
+    )
+    featured_image_small = ImageSpecField(
+        source='featured_image',
+        processors=[ResizeToFill(200, 100)],
+        format='JPEG',
+        options={'quality': 75}
+    )
+    featured_image_webp = ImageSpecField(
+        source='featured_image',
+        processors=[ResizeToFill(800, 400)],
+        format='WEBP',
+        options={'quality': 80}
+    )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -101,7 +131,23 @@ class UserProfile(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(max_length=500, blank=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(
+        upload_to='avatars/', 
+        blank=True, 
+        null=True
+    )
+    avatar_thumbnail = ImageSpecField(
+        source='avatar',
+        processors=[ResizeToFill(150, 150)],
+        format='JPEG',
+        options={'quality': 85}
+    )
+    avatar_small = ImageSpecField(
+        source='avatar',
+        processors=[ResizeToFill(50, 50)],
+        format='JPEG',
+        options={'quality': 80}
+    )
     website = models.URLField(blank=True)
     twitter = models.CharField(max_length=50, blank=True)
     github = models.CharField(max_length=50, blank=True)

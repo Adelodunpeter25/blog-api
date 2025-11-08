@@ -18,13 +18,14 @@ class PostListSerializer(serializers.ModelSerializer):
     read_time = serializers.SerializerMethodField()
     reaction_counts = serializers.SerializerMethodField()
     user_reactions = serializers.SerializerMethodField()
+    featured_image_urls = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
         fields = [
             'id', 'title', 'slug', 'excerpt', 'author_name', 'category', 
-            'tags', 'featured_image', 'created_at', 'views_count', 'read_time',
-            'reaction_counts', 'user_reactions'
+            'tags', 'featured_image', 'featured_image_urls', 'created_at', 
+            'views_count', 'read_time', 'reaction_counts', 'user_reactions'
         ]
     
     def get_author_name(self, obj):
@@ -53,6 +54,19 @@ class PostListSerializer(serializers.ModelSerializer):
             user_reactions = obj.reactions.filter(user=request.user).values_list('reaction_type', flat=True)
             return list(user_reactions)
         return []
+    
+    def get_featured_image_urls(self, obj):
+        """Get optimized featured image URLs."""
+        if obj.featured_image:
+            request = self.context.get('request')
+            if request:
+                return {
+                    'large': request.build_absolute_uri(obj.featured_image_large.url),
+                    'medium': request.build_absolute_uri(obj.featured_image_medium.url),
+                    'small': request.build_absolute_uri(obj.featured_image_small.url),
+                    'webp': request.build_absolute_uri(obj.featured_image_webp.url),
+                }
+        return None
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
