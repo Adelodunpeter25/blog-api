@@ -22,6 +22,7 @@ class IsAuthorOrAdminOrReadOnly(permissions.BasePermission):
 class PostViewSet(viewsets.ModelViewSet):
     """Main viewset for posts with different actions."""
     
+    queryset = Post.objects.all()
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = PostFilter
